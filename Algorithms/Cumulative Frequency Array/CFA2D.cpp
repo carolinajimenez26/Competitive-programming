@@ -1,61 +1,78 @@
 // Cumulative Frequency Array: For Range Sum Queries
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
 using namespace std;
-const int rows = 3, cols = 4;
+const int rows = 3, cols = 3;
 
-void print(int *X) {
+void Print(vector<vector<int>>& M) {
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      cout << X[i * cols + j] << " " ;
+      cout << M[i][j] << " ";
     }
     cout << endl;
   }
   cout << endl;
 }
 
-void prefix_sum_row(int *A, int i) {
-  int j = 0;
-  int sum = A[i * cols + j];
-  j++;
-  for (; j < cols; j++) {
-    sum += A[i * cols + j];
-    A[i * cols + j] = sum;
-  }
+int CalcPrefix(int row, int col, const vector<vector<int>>& M) {
+  int up = row - 1 >= 0 ? M[row - 1][col] : 0;
+  int left = col - 1 >= 0 ? M[row][col - 1] : 0;
+  int diag = row - 1 >= 0 && col - 1 >= 0 ? M[row - 1][col - 1] : 0;
+  return up + left - diag;
 }
 
-void prefix_sum_col(int *A, int j) {
-  int i = 0;
-  int sum = A[i * cols + j];
-  i++;
-  for (; i < rows; i++) {
-    sum += A[i * cols + j];
-    A[i * cols + j] = sum;
-  }
-}
-
-void prefix_sum(int *A) {
-  for (int i = 0; i < rows; i++) {
-    prefix_sum_row(A,i);
-  }
-  for (int j = 0; j < cols; j++) {
-    prefix_sum_col(A,j);
-  }
-}
-
-void receive(int *X) {
+vector<vector<int>> CreateCF2D(const vector<vector<int>>& M) {
+  vector<vector<int>> result = M;
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      cin >> X[i * cols + j];
+      result[i][j] += CalcPrefix(i, j, result);
     }
   }
+  return result;
+}
+
+int QueryPrefix(const vector<vector<int>>& M, pair<int, int> from, pair<int, int> to) {
+  int i1 = from.first, j1 = from.second, i2 = to.first, j2 = to.second;
+  int rect_up = i1 - 1 >= 0 ? M[i1 - 1][j2] : 0;
+  int rect_left = j1 - 1 >= 0 ? M[i2][j1 - 1] : 0;
+  int rect_diag = i1 - 1 >= 0 && j1 - 1 >= 0 ? M[i1 - 1][j1 - 1] : 0;
+  return M[i2][j2] - rect_up - rect_left + rect_diag;
 }
 
 int main(void) {
-  auto A = new int[rows * cols];
-  receive(A);
-  prefix_sum(A);
-  print(A);
-  cout << A[1 * cols + 2] << endl;
-  delete A;
+  vector<vector<int>> M = {
+    {1, 2, 3,}, 
+    {4, 5, 6,}, 
+    {7, 8, 9,},
+  };
+  Print(M);
+  vector<vector<int>> CFM_expected = {
+    {1, 3,6},
+    {5,12,21},
+    {12,27,45},
+  };
+  vector<vector<int>> CFM = CreateCF2D(M);
+  Print(CFM);
+  if (CFM != CFM_expected) {
+    cout << "Error creating prefix sum 2D" << endl;
+    return 0;
+  }
+
+  if (QueryPrefix(CFM, {1, 1}, {2, 2}) != 28) {
+    cout << "Error querying prefix sum 2D" << endl;
+    return 0;
+  }
+
+  if (QueryPrefix(CFM, {0, 0}, {2, 2}) != 45) {
+    cout << "Error querying prefix sum 2D" << endl;
+    return 0;
+  }
+
+  if (QueryPrefix(CFM, {1, 0}, {2, 2}) != 39) {
+    cout << "Error querying prefix sum 2D" << endl;
+    return 0;
+  }
+
+  cout << "Good job" << endl;
   return 0;
 }

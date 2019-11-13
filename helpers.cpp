@@ -4,6 +4,13 @@ using namespace std;
 #define dbg(x) cout << #x << ": " << x << endl
 #define INF numeric_limits<int>::max()
 
+struct TreeNode {
+  int val;
+  TreeNode *left;
+  TreeNode *right;
+  TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+ 
 int tonum(char &s) {
   stringstream ss;
   ss << s;
