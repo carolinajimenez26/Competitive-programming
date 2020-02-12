@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
@@ -27,12 +28,24 @@ private:
   }
 public:
   // O (n ** 2), where n = nums.size()
-  int subarraySum(vector<int>& nums, int k) {
+  int subarraySum2(vector<int>& nums, int k) {
     int result = 0;
     for (int i = 0; i < nums.size(); i++) {
       result += GetContinuousSum(nums, i, k);
     }
     return result + getCountElementsEquals(nums, k);
+  }
+  // O (n)
+  int subarraySum(vector<int>& nums, int k) {
+    int count = 0, sum = 0;
+    unordered_map<int, int> m;
+    m[0] = 1;
+    for (int i = 0; i < nums.size(); i++) {
+        sum += nums[i];
+        count += m[sum - k];
+        m[sum] += 1;
+    }
+    return count;
   }
 };
 
