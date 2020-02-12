@@ -1,1 +1,4 @@
 *.out
+*.pdf
+*.vscode/
+*.DS_Store
