@@ -48,9 +48,9 @@ void print(T v) {
 }
 
 // Extracted from https://www.geeksforgeeks.org/print-binary-tree-2-dimensions/
-void print2D(Node *root, int space, int COUNT) {
+void print2D(Node *root, int space = 0, int COUNT = 10) {
   // Base case
-  if (root == NULL) return;
+  if (root == nullptr) return;
   // Increase distance between levels
   space += COUNT;
 
