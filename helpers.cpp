@@ -76,22 +76,36 @@ void Print2D(TreeNode *root, int space = 0, int COUNT = 10) {
 
 TreeNode* Build(vector<string>& tree) { // builds a Tree given a vector
   if (tree.empty()) return nullptr;
-  vector<TreeNode*> nodes;
-  for (int i = 0; i < tree.size(); i++) {
-    if (tree[i] == "null") {
-      nodes.push_back(nullptr);
-    } else {
-      int val = stoi(tree[i]);
-      TreeNode* node = new TreeNode(val);
-      nodes.push_back(node);
+  auto CreateNode = [](string s) -> TreeNode* {
+    if (s == "null") return nullptr;
+    return new TreeNode(stoi(s));
+  };
+  TreeNode *root = CreateNode(tree[0]);
+  queue<TreeNode*> q;
+  q.push(root);
+  int i = 1;
+  
+  while (!q.empty()) {
+    queue<TreeNode*> next_nodes;
+    while (!q.empty()) {
+      TreeNode* curr = q.front();
+      q.pop();
+      if (i < tree.size()) {
+        TreeNode* left = CreateNode(tree[i]);
+        i++;
+        curr->left = left;
+        if (left != nullptr) next_nodes.push(left);
+      } 
+      if (i < tree.size()) {
+        TreeNode* right = CreateNode(tree[i]);
+        i++;
+        curr->right = right;
+        if (right != nullptr) next_nodes.push(right);
+      } 
     }
+    q = next_nodes;
   }
-
-  for (int i = 0; i < tree.size(); i++) {
-    if (2 * i + 1 < tree.size()) nodes[i]->left = nodes[2 * i + 1];
-    if (2 * i + 1 < tree.size()) nodes[i]->right = nodes[2 * i + 2];
-  }
-  return nodes[0];
+  return root;
 }
 
 vector<string> Convert(TreeNode* root) { // converts a tree to a vector of strings
