@@ -1,73 +1,88 @@
-// See https://www.codewhoop.com/array/rotation-in-place.html
+// Try it out here:
+// https://leetcode.com/explore/featured/card/top-interview-questions-easy/92/array/646/
 #include <iostream>
 #include <vector>
 
 using namespace std;
 
-int gcd(int a, int b) {
- if(b == 0) return a;
- return gcd(b, a % b);
-}
-
-void ArrayRotate(vector<int>& A, int k) {
-  int d = -1, temp, j, n = A.size();
-  if (n == 0) return;
-  int gcd_ = gcd(n,k);
-  for(int i = 0; i < gcd_; i++) {
-    j = i;
-    temp = A[i];
-    while(true) {
-      d = (j + k) % n;
-      if(d == i) break;
-      A[j] = A[d];
-      j = d;
-    }
-    A[j] = temp;
-  }
-}
-
-void print(const vector<int>& v) {
+void Print(const vector<int>& v) {
   for (auto e : v) cout << e << " ";
   cout << endl;
 }
 
+class Solution {
+public:
+  // Space time: O(1)
+  // Runtime: O(nums.size())
+  void rotate(vector<int>& nums, int times) {
+    if (nums.empty() || nums.size() == 1) return;
+    times = times % nums.size();
+    int moved = 0, initial_idx = 0; 
+    while (moved < nums.size()) {
+      int to_move = nums[initial_idx];
+      int curr_idx = initial_idx + times;
+      while (curr_idx != initial_idx) {
+        int tmp = nums[curr_idx];
+        nums[curr_idx] = to_move;
+        to_move = tmp;
+        moved++;
+        curr_idx = (curr_idx + times) % nums.size();
+      }
+      nums[initial_idx] = to_move;
+      moved++;
+      initial_idx++;
+    }
+  }
+  // Space time: O(1)
+  // Runtime: O(k * nums.size())
+  void rotateSlow(vector<int>& nums, int k) {
+    if (nums.empty() || nums.size() == 1) return;
+    k = k % nums.size();
+    for (int rotation = 0; rotation < k; rotation++) {
+      int tmp1, tmp2;
+      tmp1 = nums[0]; 
+      for (int i = 1; i < nums.size(); i++) {
+        tmp2 = nums[i];
+        nums[i] = tmp1;
+        tmp1 = tmp2;
+      }
+      nums[0] = tmp1;
+    }
+  }
+};
+
 struct Test {
   vector<int> nums;
-  int d;
-  vector<int> result;
+  int k;
+  vector<int> expected;
 };
 
 int main(void) {
   vector<Test> tests = {
     {
-      {1,2,3,4,5},
-      2,
-      {3,4,5,1,2}
-    },
-    {
-      {1,2,3,4,5},
-      4,
-      {5,1,2,3,4}
-    },
-    {
       {1},
-      4,
+      3,  
       {1}
     },
     {
       {},
-      4,
+      3,  
       {}
     },
     {
-      {1,2,3,4,5},
-      5,
-      {1,2,3,4,5}
+      {1,2},
+      3,  
+      {2,1}
     },
     {
-      {1,2,3,4,5},
-      6,
-      {2,3,4,5,1}
+      {1,2,3},
+      3,
+      {1,2,3}
+    },
+    {
+      {1,2,3,4,5,6,7},
+      3,  
+      {5,6,7,1,2,3,4}
     },
     {
       {1,2,3,4},
@@ -75,32 +90,36 @@ int main(void) {
       {3,4,1,2}
     },
     {
-      {41, 73, 89, 7, 10, 1, 59, 58, 84, 77, 77, 97, 58, 1, 86, 58, 26, 10, 86, 51},
-      10,
-      {77, 97, 58, 1, 86, 58, 26, 10, 86, 51, 41, 73, 89, 7, 10, 1, 59, 58, 84, 77}
+      {-1,-100,3,99},
+      2,
+      {3,99,-1,-100}
+    },
+    {
+      {1,2,3,4},
+      2,
+      {3,4,1,2}
+    },
+    {
+      {1,2,3,4,5,6},
+      2,
+      {5,6,1,2,3,4}
     }
   };
-  int tc = 0;
   bool succeed = true;
-
+  int tc = 0;
   for (auto test : tests) {
-    vector<int> out = test.nums;
-    ArrayRotate(out, test.d);
-    if (out != test.result) {
-      cout << "--------" << endl;
-      succeed = false;
+    Solution sol;
+    sol.rotate(test.nums, test.k);
+    if (test.nums != test.expected) {
       cout << "Failed on test #" << tc << endl;
-      cout << "Got: " << endl;
-      print(out);
+      cout << "Found: " << endl;
+      Print(test.nums);
       cout << "Expected: " << endl;
-      print(test.result);
-      cout << "--------" << endl;
+      Print(test.expected);
+      succeed = false;
     }
     tc++;
   }
-
-  if (succeed) cout << "Good job" << endl;
-  else cout << "Keep trying" << endl;
-
+  cout << (succeed ? "Good Job" : "Keep trying") << endl;
   return 0;
 }
