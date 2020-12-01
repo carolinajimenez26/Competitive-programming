@@ -1,35 +1,72 @@
 #include <iostream>
 #include <vector>
-#include <map>
-#include <limits>
-#define dbg(x) cout << #x << ": " << x << endl
+#include <set>
 using namespace std;
 
 struct Node {
   int val;
+  int deep;
+  Node* parent;
+
   vector<Node*> neighs;
-  Node(int _val) : val(_val) {};
+  Node(int _val) : val(_val), deep(1), parent(nullptr) {};
   void AddNeigh(Node* n) {
     neighs.push_back(n);
+  }
+
+  void PrepareDfs() {
+    parent = this;
+    deep = 1;
+  }
+
+  Node* ChooseDeepest(Node* other) {
+    if (other == nullptr || other->deep <= deep) {
+      return this;
+    }
+    return other;
   }
 };
 
 class Solution {
 private:
-  int GetHeight(Node* node, Node* parent) {
-    if (node == nullptr) return 0;
-    int max_height = 0;
-    for (auto neigh : node->neighs) {
-      if (neigh == parent) {
+  // Runtime: O(# nodes + edges)
+  // Space: O(largest branch)
+  Node* GetDeepestNodeFrom(Node* node) {
+    if (node == nullptr) return nullptr;
+    Node* ans = node;
+    for (auto &neigh : node->neighs) {
+      if (neigh == node->parent) {
         continue;
       }
-      int height = GetHeight(neigh, node);
-      max_height = max(max_height, height);
+      neigh->parent = node;
+      neigh->deep = node->deep + 1;
+      ans = ans->ChooseDeepest(GetDeepestNodeFrom(neigh));
     }
-    return 1 + max_height;
+    return ans;
   }
+
+  // Runtime: O(# nodes)
+  // Space: O(# nodes)
+  vector<int> BuildPath(Node *current) {
+    vector<int> ans;
+    while (current->parent != current) {
+      ans.push_back(current->val);
+      current = current->parent;
+    }
+    ans.push_back(current->val);
+    return ans;
+  }
+
 public:
+  void Print(const vector<int>& v) {
+    for (auto e : v) cout << e << " ";
+    cout << endl;
+  }
+
+  // Runtime: O(# nodes + edges)
+  // Space: O(# nodes + edges)
   vector<int> findMinHeightTrees(int n, vector<vector<int>>& edges) {
+    if (n == 0) return {};
     vector<Node*> nodes(n);
     for (int i = 0; i < n; i++) {
       nodes[i] = new Node(i);
@@ -40,14 +77,23 @@ public:
       a->AddNeigh(b);
       b->AddNeigh(a);
     }
-    map<int, vector<int>> heights;
-    for (int i = 0; i < n; i++) {
-      // dbg(i);
-      int height = GetHeight(nodes[i], nullptr);
-      // dbg(height);
-      heights[height].push_back(i);
+
+    for (auto &node : nodes) {
+      node->PrepareDfs();
     }
-    return heights.begin()->second;
+    Node* origin = GetDeepestNodeFrom(nodes[0]);
+    for (auto &node : nodes) {
+      node->PrepareDfs();
+    }
+    Node* end = GetDeepestNodeFrom(origin);
+    vector<int> path = BuildPath(end);
+    vector<int> ans;
+    int mid = path.size() / 2;
+    if (path.size() % 2 == 0) { // there are 2 middles
+      ans.push_back(path[mid - 1]);
+    }
+    ans.push_back(path[mid]);
+    return ans;
   }
 };
 
@@ -56,11 +102,6 @@ struct Test {
   vector<vector<int>> edges;
   vector<int> expected;
 };
-
-void Print(const vector<int>& v) {
-  for (auto e : v) cout << e << " ";
-  cout << endl;
-}
 
 int main(void) {
   vector<Test> tests ={
@@ -76,21 +117,20 @@ int main(void) {
     {
       2, {{0,1}}, {0,1}
     },
-    {
-      4, {}, {0,1,2,3}
-    },
   };
   int tc = 0;
   bool succeed = true;
   for (auto test : tests) {
     Solution sol;
     vector<int> out = sol.findMinHeightTrees(test.n, test.edges);
-    if (out != test.expected) {
+    set<int> out_set(out.begin(), out.end());
+    set<int> test_expected_set(test.expected.begin(), test.expected.end());
+    if (out_set != test_expected_set) {
       cout << "Failed on test #" << tc << endl;
       cout << "Found: " << endl;
-      Print(out);
+      sol.Print(out);
       cout << "Expected: " << endl;
-      Print(test.expected);
+      sol.Print(test.expected);
       succeed = false;
     }
     tc++;
