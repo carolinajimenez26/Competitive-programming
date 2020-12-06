@@ -2,6 +2,30 @@
 #include <vector>
 using namespace std;
 
+struct PrefixSum {
+  vector<int> sum;
+
+  PrefixSum(const string& s, char c) {
+    sum.assign(s.size(), 0);
+    sum[0] = (s[0] == c);
+    for (int i = 1; i < sum.size(); i++) {
+      int plus = (s[i] == c);
+      sum[i] = (sum[i - 1] + plus); 
+    }
+  }
+
+  int Get(int from, int to) {
+    if (from > to) return 0;
+    if (from == 0) return sum[to];
+    return sum[to] - sum[from - 1];
+  }
+
+  void Print() {
+    for (auto e : sum) cout << e << " ";
+    cout << endl;
+  }
+};
+
 class Solution {
 private:
   void Print(const vector<int>& v) {
@@ -14,33 +38,20 @@ public:
   // Space: O(n) 
   int minimumDeletions(string s) {
     if (s.empty()) return 0;
-    vector<int> a_count(s.size(), 0), b_count(s.size(), 0);
-    a_count[0] = (s[0] == 'a');
-    b_count[0] = (s[0] == 'b');
-    for (int i = 1; i < s.size(); i++) {
-      a_count[i] += (a_count[i - 1] + (s[i] == 'a'));
-      b_count[i] += (b_count[i - 1] + (s[i] == 'b'));
-    }
-    // Print(a_count);
-    // Print(b_count);
+    PrefixSum a_count(s, 'a');
+    // a_count.Print();
+    PrefixSum b_count(s, 'b');
+    // b_count.Print();
     vector<int> costs(s.size(), 0);
-    bool is_valid = true, b_appeared = false;
     for (int i = 0; i < costs.size(); i++) {
-      if (s[i] == 'b') b_appeared = true;
-      if (s[i] == 'a' && b_appeared) is_valid = false;
-      if (is_valid) {
-        if (s[i] == 'a') {
-          costs[i] += b_count.back() - b_count[i]; // remove all b occurrances after this one
-        } else {
-          costs[i] += a_count.back() - a_count[i]; // remove all a occurrances after this one
-        }
-      } else {
-        costs[i] += a_count.back() - a_count[i]; // remove all a occurrances after this one
-        costs[i] += b_count[i]; // remove all b occurrances before this one
-      }
+      costs[i] += a_count.Get(i + 1, s.size() - 1);
+      costs[i] += b_count.Get(0, i);
     }
     // Print(costs);
-    return *min_element(costs.begin(), costs.end());
+    int best = *min_element(costs.begin(), costs.end()); // make it balance
+    best = min(best, a_count.Get(0, s.size() - 1)); // keep all b's
+    best = min(best, b_count.Get(0, s.size() - 1)); // keep all a's
+    return best;
   }
 };
 
