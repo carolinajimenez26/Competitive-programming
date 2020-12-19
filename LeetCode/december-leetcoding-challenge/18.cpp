@@ -1,113 +1,40 @@
 #include <iostream>
 #include <vector>
-#define dbg(x) cout << #x << ": " << x << endl
 using namespace std;
-
-struct Range {
-  int from, to;
-
-  int GetSize() {
-    return (to - from);
-  }
-
-  void KeepLower(Range other) {
-    if (to < other.to) {
-      from = other.from;
-      to = other.to;
-    }
-  }
-};
 
 class Solution {
 private:
-  vector<int> v;
-
-  bool IsValid(int idx) {
-    return idx >= 0 && idx < v.size();
-  }
-
-  bool CanGoUp(int idx) {
-    if (!IsValid(idx) || (idx + 1 >= v.size())) return false;
-    return v[idx] <= v[idx + 1];
-  }
-
-  bool CanGoDown(int idx) {
-    if (!IsValid(idx) || (idx + 1 >= v.size())) return false;
-    return v[idx] > v[idx + 1];
-  }
-
-  Range GoUp(int from) {
-    // dbg("GoUp"); dbg(from);
-    if (!CanGoUp(from)) return {from, from};
-    int curr = v[from];
-    int i = from;
-    for (; i < v.size(); i++) {
-      if (v[i] < curr) break;
-      curr = v[i];
-    }
-    return {from, i - 1};
-  }
-
-  Range GoDown(int from, Range& last) {
-    // dbg("GoDown"); dbg(from);
-    if (!CanGoDown(from)) return {from, from};
-    int curr = v[from];
-    int i = from;
-    for (; i < v.size(); i++) {
-      if (v[i] > curr) break;
-      curr = v[i];
-      if (curr > v[last.from] && curr < v[last.to]) {
-        last.to = i;
+  vector<bool> CalcMinToLeft(const vector<int>& nums) {
+    vector<bool> left_to_right(nums.size(), false);
+    int best = nums[0];
+    for (int i = 1; i < nums.size(); i++) {
+      if (nums[i] > best) {
+        left_to_right[i] = true;
       }
+      best = min(best, nums[i]);
     }
-    return {from, i - 1};
+    return left_to_right;
   }
 
-  vector<int> Normalize(const vector<int>& nums) {
-    vector<int> ans;
-    int i = 0;
-    while (i < nums.size()) {
-      int curr = nums[i];
-      while (i < nums.size() && nums[i] == curr) i++;
-      ans.push_back(curr);
+  vector<bool> CalcMaxToRight(const vector<int>& nums) {
+    vector<bool> right_to_left(nums.size(), false);
+    int best = nums.back();
+    for (int i = nums.size() - 1; i >= 0; i--) {
+      if (nums[i] < best) {
+        right_to_left[i] = true;
+      }
+      best = max(best, nums[i]);
     }
-    return ans;
-  }
-
-  bool Validate(Range curr, Range last) {
-    if (last.GetSize() == 0) return false;
-    if (!IsValid(last.to) || !IsValid(curr.to)) return false;
-    return (curr.GetSize() >= 1 && v[last.to] < v[curr.to]);
-  }
-
-  void Print() {
-    for (auto e : v) cout << e << " ";
-    cout << endl;
+    return right_to_left;
   }
 public:
   bool increasingTriplet(vector<int>& nums) {
-    v = Normalize(nums);
-    if (v.size() <= 2) return false;
-    // Print();
-    int i = 0;
-    Range last = {-1,-1};
-    while (i < v.size()) {
-      // dbg("---");
-      // dbg(i);
-      Range curr = GoUp(i);
-      i = curr.to;
-      // dbg(i);
-      // dbg(curr.GetSize());
-      // dbg(curr.from); dbg(curr.to); dbg(last.from); dbg(last.to);
-      if (curr.GetSize() >= 2 || Validate(curr, last)) {
-        return true;
-      }
-      last.KeepLower(curr);
-      Range tmp = GoDown(i, last);
-      i = tmp.to;
-      // dbg(i);
-      // dbg((i == v.size() - 1));
-      if (i == v.size() - 1) return false;
+    if (nums.size() <= 2) return false; 
+    vector<bool> left_to_right = CalcMinToLeft(nums);
+    vector<bool> right_to_left= CalcMaxToRight(nums);
+
+    for (int i = 0; i < nums.size(); i++) {
+      if (left_to_right[i] && right_to_left[i]) return true;
     }
     return false;
   }
