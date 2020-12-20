@@ -13,11 +13,6 @@ struct Pos {
   bool operator == (const Pos& other) const {
     return (row == other.row && col == other.col);
   }
-
-  void Print(string s) {
-    cout << "---" << s << "---" << endl;
-    cout << row << ", " << col << endl;
-  }
 };
 
 struct Grid {
@@ -80,7 +75,6 @@ public:
     memo.assign(grid.GetRows(), vector<vector<int>>
                 (grid.GetCols(), vector<int>
                 (grid.GetCols(), -1)));
-    // grid.Print();
     return GetBest({0,0}, {0, grid.GetCols() - 1});
   }
 private:
@@ -89,9 +83,6 @@ private:
   vector<vector<vector<int>>> memo;
 
   int GetBest(Pos robot1, Pos robot2) {
-    // dbg("===GetBest==="); 
-    // robot1.Print("robot1");
-    // robot2.Print("robot2");
     assert(robot1.row == robot2.row);
     if (grid.IsInLastRow(robot1)) {
       if (robot1 == robot2) {
@@ -116,13 +107,9 @@ private:
       for (int j = 0; j < delta_col.size(); j++) { // r2
         Pos new_pos_r2 = {robot2.row + 1, robot2.col + delta_col[j]};
         if (!grid.IsValid(new_pos_r2)) continue;
-        // new_pos_r1.Print("robot1");
-        // new_pos_r2.Print("robot2");
 
-        // dbg(val);
         int op = cur_sum + GetBest(new_pos_r1, new_pos_r2);
         best = max(best, op);
-        // dbg(best);
       }
     }
     memo[robot1.row][robot1.col][robot2.col] = best;
