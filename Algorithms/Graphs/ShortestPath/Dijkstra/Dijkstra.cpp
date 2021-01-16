@@ -10,17 +10,25 @@ struct Edge {
   int weight;
 
   Edge(Node* node, int weight): node(node), weight(weight) {}
+};
 
-  bool operator<(const Edge& other) const {
-    return weight > other.weight;
+struct Cost {
+  Node* node;
+  int cost;
+
+  Cost(Node* node, int cost): node(node), cost(cost) {}
+
+  bool operator<(const Cost& other) const {
+    // Return min cost as "high priority".
+    return cost > other.cost;
   }
 };
 
 struct Node {
-  int val;
+  int id;
   vector<Edge> edges;
 
-  Node(int val): val(val) {}
+  Node(int id): id(id) {}
 };
 
 class Graph {
@@ -60,19 +68,25 @@ private:
 vector<int> Dijkstra(const Graph& graph, Node* source) {
   const int INF = numeric_limits<int>::max();
   vector<int> distances(graph.GetSize(), INF);
-  priority_queue<Edge> q;
-  distances[source->val] = 0;
+  priority_queue<Cost> q;
+  distances[source->id] = 0;
   q.emplace(source, 0);
   while (!q.empty()) {
-    Edge curr_edge = q.top();
+    Cost curr_cost = q.top();
     q.pop();
-    Node* curr = curr_edge.node;
-    int curr_weight = curr_edge.weight;
+    Node* curr = curr_cost.node;
+    if (curr_cost.cost > distances[curr->id]) {
+      // Old cost, ignore.
+      continue;
+    }
+
     for (auto edge : curr->edges) {
       Node* to = edge.node;
-      if (distances[to->val] > distances[curr->val] + edge.weight) {
-        distances[to->val] = distances[curr->val] + edge.weight;
-        q.push(edge);
+      if (distances[to->id] > distances[curr->id] + edge.weight) {
+        // set.erase(Cost(to, distances[to->id]))
+        distances[to->id] = distances[curr->id] + edge.weight;
+        // set.insert(Cost(to, distances[to->id]))
+        q.emplace(to, distances[to->id]);
       }
     }
   }
