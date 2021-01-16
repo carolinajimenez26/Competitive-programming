@@ -1,73 +1,103 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <cassert>
 using namespace std;
-#define Node pair<int, int> // v, w
-const int INF = numeric_limits<int>::max();
-#define dbg(x) cout << #x << ": " << x << endl
 
-struct cmp {
-  bool operator() ( const int &a , const int &b ) {
-    return a > b;
+struct Node;
+struct Edge {
+  Node* node;
+  int weight;
+
+  Edge(Node* node, int weight): node(node), weight(weight) {}
+
+  bool operator<(const Edge& other) const {
+    return weight > other.weight;
   }
 };
 
-void dijkstra(vector<Node> graph[], int src, vector<int> &parent, vector<int> &distances) {
-  priority_queue<int, vector<int>, cmp> Q;
-  Q.push(src);
-  distances[src] = 0;
-  int u, w;
-  while (!Q.empty()) {
-    u = Q.top();
-    Q.pop();
-    // dbg(u);
-    for (auto neigh : graph[u]) {
-      // dbg(neigh.first);
-      w = neigh.second;
-      if (distances[u] + w < distances[neigh.first]) {
-        distances[neigh.first] = distances[u] + w;
-        parent[neigh.first] = u;
-        Q.push(neigh.first);
+struct Node {
+  int val;
+  vector<Edge> edges;
+
+  Node(int val): val(val) {}
+};
+
+class Graph {
+public:
+  Graph(int nodes) {
+    for (int i = 0; i < nodes; i++) {
+      graph.push_back(new Node(i));
+    }
+  }
+
+  void AddEdge(int from, int to, int weight) {
+    graph[from]->edges.emplace_back(graph[to], weight);
+  }
+
+  int GetSize() const {
+    return graph.size();
+  }
+
+  bool IsValid(int idx) {
+    return idx >= 0 && idx < graph.size();
+  }
+
+  Node* GetNode(int idx) {
+    assert(IsValid(idx));
+    return graph[idx];
+  }
+
+  ~Graph() {
+    for (int i = 0; i < graph.size(); i++) {
+      delete graph[i];
+    }
+  }
+private:
+  vector<Node*> graph;
+};
+
+vector<int> Dijkstra(const Graph& graph, Node* source) {
+  const int INF = numeric_limits<int>::max();
+  vector<int> distances(graph.GetSize(), INF);
+  priority_queue<Edge> q;
+  distances[source->val] = 0;
+  q.emplace(source, 0);
+  while (!q.empty()) {
+    Edge curr_edge = q.top();
+    q.pop();
+    Node* curr = curr_edge.node;
+    int curr_weight = curr_edge.weight;
+    for (auto edge : curr->edges) {
+      Node* to = edge.node;
+      if (distances[to->val] > distances[curr->val] + edge.weight) {
+        distances[to->val] = distances[curr->val] + edge.weight;
+        q.push(edge);
       }
     }
   }
+  return distances;
 }
 
-void print(int u, vector<int> parent) {
-  if (parent[u] != -1) {
-    print(parent[u], parent);
+void PrintDistances(const vector<int>& v) {
+  for (int i = 0; i < v.size(); i++) {
+    cout << i + 1 << "->" << v[i] << endl;
   }
-  cout << u << endl;
-}
-
-void print(vector<int> v) {
-  for (auto e : v) cout << e << " ";
-  cout << endl;
-}
-
-void print(vector<bool> v) {
-  for (auto e : v) cout << e << " ";
-  cout << endl;
 }
 
 int main(void) {
   int nodes, edges, u, v, w;
   cin >> nodes >> edges;
-
-  vector<Node> graph[nodes];
-  vector<int> parent(nodes, -1), distances(nodes, INF);
+  Graph graph(nodes);
 
   for (int i = 0; i < edges; i++) {
     cin >> u >> v >> w;
-    u--; v--; // 0 index
-    graph[u].push_back(make_pair(v, w));
+    u--; v--;
+    graph.AddEdge(u, v, w);
   }
-  // print(visited);
-  dijkstra(graph, 0, visited, parent, distances);
-  // for (int i = 0; i < nodes; i++) {
-  //   print(i, parent);
-  //   cout << endl;
-  // }
-  // print(visited);
-  print(parent);
-  print(distances);
+
+  assert("Graph should have at least one node" && graph.GetSize() != 0);
+  vector<int> distances = Dijkstra(graph, graph.GetNode(0));
+  PrintDistances(distances);
   return 0;
 }
