@@ -1,37 +1,44 @@
 #include <iostream>
 #include <vector>
-#include <stack>
+#include <unordered_map>
 using namespace std;
 
 class Solution {
 public:
-  bool isValid(string s) {
-    stack<char> opened;
-    for (auto c : s) {
-      if (IsOpenning(c)) {
-        opened.push(c);
-      } else {
-        if (opened.empty() || !Match(opened.top(), c)) {
-          return false;
-        }
-        opened.pop();
-      }
-    }
-    return opened.empty();
+  bool isValid(string s_) {
+    s = s_;
+    idx = 0;
+    char empty = 'x';
+    return IsValid(empty);
   }
 private:
-  bool IsOpenning(char c) {
-    return (c == '(' || c == '{' || c == '[');
+  string s;
+  int idx;
+  unordered_map<char, char> matches = {
+    {'(', ')'},
+    {'{', '}'},
+    {'[', ']'}
+  };
+
+  bool IsValid(const char last_opened) {
+    if (idx >= s.size()) {
+      return last_opened == 'x';
+    }
+    char curr = s[idx];
+    if (!IsOpenning(curr)) {
+      return matches[last_opened] == curr;
+    }
+    idx++;
+    bool next = IsValid(curr);
+    if (!next) {
+      return false;
+    }
+    idx++;
+    return IsValid(last_opened);
   }
 
-  bool Match(char opening, char closing) {
-    if (closing == ')') {
-      return opening == '(';
-    }
-    if (closing == '}') {
-      return opening == '{';
-    }
-    return opening == '[';
+  bool IsOpenning(char c) {
+    return (c == '(' || c == '{' || c == '[');
   }
 };
 
