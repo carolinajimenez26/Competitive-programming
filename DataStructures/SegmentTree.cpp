@@ -3,93 +3,111 @@ using namespace std;
 #define COUNT 10
 
 class SegmentTree {
+public:
+  SegmentTree(const vector<int>& v) {
+    A = v;
+    n = v.size();
+    st.assign(4 * n, 0);
+    Build(1, 0, n - 1);
+  }
+
+  void Build(int node_idx, int L, int R) {
+    if (L == R) {
+      st[node_idx] = L;
+      return;
+    }
+    Build(Left(node_idx), L, (L + R) / 2);
+    Build(Right(node_idx), (L + R) / 2 + 1, R);
+    int min_left = st[Left(node_idx)];
+    int min_right = st[Right(node_idx)];
+    int min_pos = (A[min_left] <= A[min_right]) ? min_left : min_right;
+    st[node_idx] = min_pos;
+  }
+
+  int MinInRange(int i, int j) {
+    return MinInRange(1, 0, n - 1, i, j);
+  }
+
+  void Change(const int pos, int num) {
+    A[pos] = num;
+    Change(1, 0, n - 1, pos);
+  }
+
+  void Print() {
+    Print(1, 0, n - 1, 0);
+  }
 private:
   vector<int> st, A;
   int n;
+  const int COUNT = 10;
 
-  int left (int p) { return p << 1; }
-  int right (int p) { return (p << 1) + 1; }
-
-  void build (int p, int L, int R) { // O(n)
-    if (L == R) st[p] = L;
-    else {
-      build(left(p), L, (L + R) / 2);
-      build(right(p), (L + R) / 2 + 1, R);
-      int p1 = st[left(p)], p2 = st[right(p)];
-      st[p] = (A[p1] <= A[p2]) ? p1 : p2;
-    }
+  int Left(int p) { 
+    return p * 2; 
   }
 
-  // Range Minimum Query
-  int rmq (int p, int L, int R, int i, int j) { // O(log n)
+  int Right(int p) { 
+    return (p * 2) + 1; 
+  }
+
+  // [i, j] is a fixed interval.
+  // [L, R] is changing according to the node.
+  int MinInRange(int node_idx, int L, int R, int i, int j) { // O(log n)
+    // interval [i,j] is outside interval [L,R] 
+    // that is either: 
+    //      - [L,R][i, j] i > R
+    //      - [i, j][L, R] j < L
     if (i > R || j < L) return -1;
-    if (L >= i and R <= j) return st[p];
 
-    int p1 = rmq(left(p), L, (L + R) / 2, i, j);
-    int p2 = rmq(right(p), (L + R) / 2 + 1, R, i, j);
+    // [L, R] is fully contained in [i, j]:
+    // that is: [i, [L, R], j]
+    if (InRange(L, i, j) && InRange(R, i, j)) return st[node_idx];
 
-    if (p1 == -1) return p2;
-    if (p2 == -1) return p1;
-    return (A[p1] <= A[p2]) ? p1 : p2;
+    // [L, R] is partially contained, try to split.
+    int mid = (L + R) / 2;
+    int min_left = MinInRange(Left(node_idx), L, mid, i, j);
+    int min_right = MinInRange(Right(node_idx), mid + 1, R, i, j);
+    if (min_left == -1) {
+      return min_right;
+    }
+    if (min_right == -1) {
+      return min_left;
+    }
+    int min_pos = (A[min_left] <= A[min_right]) ? min_left : min_right;
+    return min_pos;
   }
 
-  void change (int p, int L, int R, int element_pos) {
+  bool InRange(int idx, int L, int R) {
+    return idx >= L && idx <= R;
+  }
+
+  void Change(int node_idx, int L, int R, const int element_pos) {
     if (L == R && L == element_pos) {
-      st[p] = L;
+      st[node_idx] = element_pos;
       return;
     }
-    if (R < element_pos || L > element_pos) return;
-    if (R > n || L < 0) return;
-    else {
-      change(left(p), L, (L + R) / 2, element_pos);
-      change(right(p), (L + R) / 2 + 1, R, element_pos);
-      int p1 = st[left(p)], p2 = st[right(p)];
-      st[p] = (A[p1] <= A[p2]) ? p1 : p2;
+    if (!InRange(element_pos, L, R)) {
+      return;
     }
+    Change(Left(node_idx), L, (L + R) / 2, element_pos);
+    Change(Right(node_idx), (L + R) / 2 + 1, R, element_pos);
+    int min_left = st[Left(node_idx)]; 
+    int min_right = st[Right(node_idx)];
+    int min_pos = (A[min_left] <= A[min_right]) ? min_left : min_right;
+    st[node_idx] = min_pos;
   }
 
-  void print (int p, int L, int R, int space) {
+  void Print(int node_idx, int L, int R, int space) {
     space += COUNT;
     if (L == R) {
-      for (int i = COUNT; i < space; i++)
-          printf(" ");
-
-      cout << st[p] << endl;
+      for (int i = COUNT; i < space; i++) cout << " ";
+      cout << st[node_idx] << endl;
       return;
     }
-    else {
-      print(left(p), L, (L + R) / 2, space);
-
-      cout << endl;
-      for (int i = COUNT; i < space; i++)
-          cout << " ";
-
-      cout << st[p] << endl;
-
-      print(right(p), (L + R) / 2 + 1, R, space);
-    }
-  }
-
-public:
-
-  SegmentTree (const vector<int> &_A) {
-    A = _A;
-    n = (int)A.size();
-    st.assign(4 * n, 0);
-    build(1, 0, n - 1);
-  }
-
-  int rmq (int i, int j) {
-    return rmq(1, 0, n - 1, i, j);
-  }
-
-  void change (int element_pos, int element) { // changes an element of the tree
-    A[element_pos] = element;
-    change(1, 0, n - 1, element_pos);
-  }
-
-  void print () {
-    print(1, 0, n - 1, 0);
+    Print(Left(node_idx), L, (L + R) / 2, space);
+    cout << endl;
+    for (int i = COUNT; i < space; i++) cout << " ";
+    cout << st[node_idx] << endl;
+    Print(Right(node_idx), (L + R) / 2 + 1, R, space);
   }
 };
 
@@ -97,15 +115,15 @@ int main(void) {
   int arr[] = {18, 17, 13, 19, 15, 11, 20};
   vector<int> A(arr, arr + 7);
   SegmentTree st(A);
-  st.print();
-  cout << "RMQ(1,3) = " << st.rmq(1,3) << endl;
-  cout << "RMQ(4,6) = " << st.rmq(4,6) << endl;
+  st.Print();
+  cout << "RMQ(1,3) = " << st.MinInRange(1,3) << endl;
+  cout << "RMQ(4,6) = " << st.MinInRange(4,6) << endl;
   arr[5] = 99;
   st.change(5, 99);
-  // st.print();
-  cout << "RMQ(4,6) = " << st.rmq(4,6) << endl;
+  // st.Print();
+  cout << "RMQ(4,6) = " << st.MinInRange(4,6) << endl;
   st.change(2, 1);
-  // st.print();
-  cout << "RMQ(0,6) = " << st.rmq(0,6) << endl;
+  // st.Print();
+  cout << "RMQ(0,6) = " << st.MinInRange(0,6) << endl;
   return 0;
 }
