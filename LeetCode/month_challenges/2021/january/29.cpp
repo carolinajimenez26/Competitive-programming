@@ -42,23 +42,21 @@ public:
   }
 private:
   vector<vector<int>> SeparateBySameX(const set<CartesianNode>& ordered) {
-    vector<vector<int>> ans;
+    vector<vector<int>> result;
     if (ordered.empty()) {
-      return ans;
+      return result;
     }
     auto it = ordered.begin();
     while (it != ordered.end()) {
-      int x = (*it).pos.x;
-      auto it2 = it;
+      int x = it->pos.x;
       vector<int> partial;
-      while (it2 != ordered.end() && (*it2).pos.x == x) {
-        partial.push_back((*it2).val);
-        it2++;
+      while (it != ordered.end() && it->pos.x == x) {
+        partial.push_back(it->val);
+        it++;
       }
-      ans.push_back(partial);
-      it = it2;
+      result.push_back(partial);
     }
-    return ans;
+    return result;
   }
 
   void DFS(set<CartesianNode>& ordered, TreeNode* root, Position pos) {
