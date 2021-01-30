@@ -6,7 +6,7 @@ using namespace std;
 
 // h -> e -> l -> l -> o -> 
 //   -> a -> l -> l -> o -> 
-//   -> i -> l -> a -> m
+//   -> i -> l -> a -> m ->
 // holax
 class Node {
 public:
@@ -42,8 +42,10 @@ public:
     }
   }
   
-  /** Returns if there is any word in the trie that equals to the given word 
-      after modifying exactly one character */
+  /*
+  * Returns if there is any word in the trie that equals to the given word 
+  * after modifying exactly one character
+  */
   bool search(string word) {
     return MatchWithDiff(1, word, 0, trie, 0);
   }
@@ -62,10 +64,6 @@ private:
     Add(word, idx + 1, node->GetNeigh(word[idx]));
   }
 
-  bool Equals(char a, char b) {
-    return a == b;
-  }
-
   bool MatchWithDiff(int expected_diff, const string &word, int idx, Node* node, int curr_diff) {
     if (idx == word.size()) {
       if (node->is_final_node) {
@@ -77,8 +75,11 @@ private:
       return false;
     }
     for (auto [letter, neigh] : node->edges) {
-      int diff = curr_diff + !Equals(letter, word[idx]);
-      if (MatchWithDiff(expected_diff, word, idx + 1, neigh, diff)) {
+      int next_diff = curr_diff;
+      if (letter != word[idx]) {
+        next_diff++;
+      }
+      if (MatchWithDiff(expected_diff, word, idx + 1, neigh, next_diff)) {
         return true;
       }
     }
