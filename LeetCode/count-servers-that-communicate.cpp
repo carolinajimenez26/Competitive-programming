@@ -19,25 +19,14 @@ class Solution {
 private:
   vector<vector<int>> grid;
 
-  vector<Position> CalculateConnectionsRow(int row) {
+  vector<Position> CalculateConnections(Position pos, int delta_row, int delta_col) {
     vector<Position> result;
-    for (int col = 0; col < grid[0].size(); col++) {
-      if (grid[row][col]) {
-        result.emplace_back(row, col);
+    while (pos.row < grid.size() && pos.col < grid[0].size()) {
+      if (grid[pos.row][pos.col]) {
+        result.emplace_back(pos.row, pos.col);
       }
-    }
-    if (result.size() == 1) {
-      return {};
-    }
-    return result;
-  }
-
-  vector<Position> CalculateConnectionsCol(int col) {
-    vector<Position> result;
-    for (int row = 0; row < grid.size(); row++) {
-      if (grid[row][col]) {
-        result.emplace_back(row, col);
-      }
+      pos.row += delta_row;
+      pos.col += delta_col;
     }
     if (result.size() == 1) {
       return {};
@@ -55,15 +44,15 @@ public:
   int countServers(vector<vector<int>>& grid_) {
     grid = grid_;
     set<Position> result;
-    vector<Position> row_connections;
     for (int row = 0; row < grid.size(); row++) {
-      vector<Position> row_connections = CalculateConnectionsRow(row);
-      Insert(row_connections, result);
+      Position pos = {row, 0};
+      vector<Position> connections = CalculateConnections(pos, 0, 1);
+      Insert(connections, result);
     }
-    vector<Position> col_connections;
     for (int col = 0; col < grid[0].size(); col++) {
-      vector<Position> col_connections = CalculateConnectionsCol(col);
-      Insert(col_connections, result);
+      Position pos = {0, col};
+      vector<Position> connections = CalculateConnections(pos, 1, 0);
+      Insert(connections, result);
     }
     return result.size();
   }
